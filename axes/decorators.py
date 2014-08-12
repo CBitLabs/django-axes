@@ -95,6 +95,10 @@ def get_ip(request):
                         'IP addresses to have direct access. {0} is not on the white list'.format(ip))
     return ip
 
+try:
+    from ipware.ip import get_ip
+except ImportError:
+    pass
 
 def get_lockout_url():
     return getattr(settings, 'AXES_LOCKOUT_URL', None)
@@ -138,7 +142,7 @@ def is_user_lockable(request):
     try:
         field = getattr(User, 'USERNAME_FIELD', 'username')
         kwargs = {
-            field: request.POST.get('username')
+            field: request.POST.get('email')
         }
         user = User.objects.get(**kwargs)
     except User.DoesNotExist:
@@ -170,7 +174,7 @@ def _get_user_attempts(request):
     """
     ip = get_ip(request)
 
-    username = request.POST.get('username', None)
+    username = request.POST.get('email', None)
 
     if USE_USER_AGENT:
         ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
@@ -267,7 +271,7 @@ def watch_login(func):
             access_log = AccessLog.objects.create(
                 user_agent=request.META.get('HTTP_USER_AGENT', '<unknown>')[:255],
                 ip_address=get_ip(request),
-                username=request.POST.get('username', None),
+                username=request.POST.get('email', None),
                 http_accept=request.META.get('HTTP_ACCEPT', '<unknown>'),
                 path_info=request.META.get('PATH_INFO', '<unknown>'),
                 trusted=not login_unsuccessful,
@@ -324,7 +328,7 @@ def is_already_locked(request):
 
 def check_request(request, login_unsuccessful):
     ip_address = get_ip(request)
-    username = request.POST.get('username', None)
+    username = request.POST.get('email', None)
     failures = 0
     attempts = get_user_attempts(request)
 
@@ -397,7 +401,7 @@ def check_request(request, login_unsuccessful):
 def create_new_failure_records(request, failures):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get('username', None)
+    username = request.POST.get('email', None)
 
     params = {
         'user_agent': ua,
@@ -426,7 +430,7 @@ def create_new_failure_records(request, failures):
 def create_new_trusted_record(request):
     ip = get_ip(request)
     ua = request.META.get('HTTP_USER_AGENT', '<unknown>')[:255]
-    username = request.POST.get('username', None)
+    username = request.POST.get('email', None)
 
     if not username:
         return False
