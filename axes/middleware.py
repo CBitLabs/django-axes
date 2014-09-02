@@ -8,4 +8,4 @@ class FailedLoginMiddleware(object):
         super(FailedLoginMiddleware, self).__init__(*args, **kwargs)
 
         # watch the auth login
-        auth_views.login = watch_login(auth_views.login)
+        # auth_views.login = watch_login(auth_views.login)
